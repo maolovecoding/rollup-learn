@@ -1,0 +1,35 @@
+{
+  "name": "rollup-learn",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "rollup -cw",
+    "build": "rollup -cw"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/maolovecoding/rollup-learn.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/maolovecoding/rollup-learn/issues"
+  },
+  "homepage": "https://github.com/maolovecoding/rollup-learn#readme",
+  "devDependencies": {
+    "@babel/core": "^7.17.10",
+    "@babel/preset-env": "^7.17.10",
+    "@rollup/plugin-babel": "^5.3.1",
+    "@rollup/plugin-commonjs": "^22.0.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@rollup/plugin-typescript": "^8.3.2",
+    "lodash": "^4.17.21",
+    "rollup": "^2.72.1",
+    "rollup-pluginutils": "^2.8.2"
+  },
+  "dependencies": {
+    "rollup-plugin-babel": "^4.4.0"
+  }
+}
