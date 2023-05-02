@@ -23,6 +23,7 @@ class Module{
     this.definitions = {} // 存放本模块的顶级变量的定义语句是那个
     // 存放变量修改的语句 副作用
     this.modifications = {}
+    this.canonicalNames = {} // 重命名的变量
     // 分析语法树
     analyse(this.ast, this.code, this)
   }
@@ -92,6 +93,12 @@ class Module{
         }
       }
     }
+  }
+  rename(name, replacement){
+    this.canonicalNames[name] = replacement
+  }
+  getCanonicalName(name){
+    return this.canonicalNames[name] || name
   }
 }
 

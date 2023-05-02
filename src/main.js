@@ -1,3 +1,3 @@
 import { name1, age } from './msg'
-const name = 'aaa'
-console.log(name, name1, age)
+import {name2 } from './name2'
+console.log(name2, name1, age)
