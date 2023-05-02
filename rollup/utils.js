@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 export function writeFileSync(filepath, content, options) {
-  if (!fs.existsSync(filepath)) mkdir(filepath)
+  // if (!fs.existsSync(filepath)) mkdir(filepath)
   fs.writeFileSync(filepath, content, options)
 }
 const dirCache = {}

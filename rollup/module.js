@@ -16,6 +16,10 @@ class Module{
       ecmaVersion: 8,
       sourceType: 'module'
     })
+    // 存放该模块内导入了那些变量 导出
+    this.imports = {} // name: {source:相对当前模块的路径/绝对路径, importName: 导入的变量名}
+    this.exports = {}
+    this.definitions = {} // 存放本模块的顶级变量的定义语句是那个
     // 分析语法树
     analyse(this.ast, this.code, this)
   }
@@ -25,6 +29,8 @@ class Module{
   expandAllStatement(){
     const allStatements = []
     this.ast.body.forEach(statement=>{
+      // 过滤掉导入的语句
+      if (statement.type === 'ImportDeclaration') return
       const statements = this.expandStatement(statement)
       allStatements.push(...statements)
     })
@@ -33,8 +39,32 @@ class Module{
   expandStatement(statement){
     statement._included = true // 语句包含在输出结果
     const res = []
+    // 找到此语句使用到的变量 把这些变量定义语句取出来，放到res数组
+    const _dependsOn = Object.keys(statement._dependsOn)
+    _dependsOn.forEach(name => {
+      const definitions = this.define(name)
+      res.push(...definitions)
+    })
     res.push(statement)
     return res
+  }
+  define(name){
+    // 区分变量是模块内声明 还是外部导入
+    if (Object.hasOwn(this.imports, name)) {
+      const { source, importName } = this.imports[name]
+      // 获取导入的模块
+      const importedModule = this.bundle.fetchModule(source, this.path)
+      const { localName } = importedModule.exports[importName]
+      return importedModule.define(localName)
+    } else {
+      // 内部定义的
+      const statement = this.definitions[name] // 变量定义的语句
+      if (statement && !statement._included) {
+        return this.expandStatement(statement)
+      } else {
+        return []
+      }
+    }
   }
 }
 

@@ -2,7 +2,7 @@ console.log('main.js')
 console.log('hello')
 
 import { name, age } from './msg'
-const say = () => {
-  console.log(name)
+function say(a, ...[b,c]) {
+  console.log(name, a, b, c)
 }
 say()

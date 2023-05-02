@@ -5,7 +5,8 @@ import Module from './module.js'
 import { writeFileSync } from './utils.js'
 class Bundle{
   constructor(options){
-    this.entryPath = path.resolve(options.entry)
+    this.entryPath = options.entry.replace(/\.js$/, '')+'.js'
+    this.modules = new Set()
   }
   /**
    * 编译
@@ -25,10 +26,23 @@ class Bundle{
   }
   /**
    * 根据模块路径获取模块
-   * @param {*} importee 
+   * @param {string} importee 被引入的模块
+   * @param {string} importer 引入的模块
+   * 在importer模块中导入了importee模块
    */
-  fetchModule(importee){
-    let route = importee
+  fetchModule(importee, importer){
+    let route
+    if (!importer) {
+      route = importee
+    } else {
+      if (path.isAbsolute(importee)) {
+        // 导入的模块是绝对路径
+        route = importee
+      } else {
+        // 导入的模块是相对路径
+        route = path.resolve(path.dirname(importer), importee.replace(/\.js$/, '')+'.js')
+      }
+    }
     if (route) {
       // 文件 内容
       const code = fs.readFileSync(route, 'utf-8')
@@ -38,6 +52,7 @@ class Bundle{
         path: route,
         bundle: this
       })
+      this.modules.add(module)
       return module
     }
   }
@@ -48,9 +63,13 @@ class Bundle{
     // 拼接statement
     const msBundle = new MagicStringBundle()
     this.statements.forEach(statement=>{
-      const soruce = statement._source.clone()
+      const source = statement._source.clone()
+      if (statement.type === 'ExportNamedDeclaration') {
+        // export const name = 'xx' => const name = 'xx'
+        source.remove(statement.start, statement.declaration.start)
+      }
       msBundle.addSource({
-        content: soruce,
+        content: source,
         separator: '\n'
       })
     })
