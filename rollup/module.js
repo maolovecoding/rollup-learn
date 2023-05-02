@@ -1,6 +1,7 @@
 import  MagicString from 'magic-string'
 import { parse } from 'acorn'
 import analyse from './ast/analyse.js'
+const SYSTEM_VARS = ['console', 'log']
 class Module{
   constructor(options){
     const {
@@ -20,6 +21,8 @@ class Module{
     this.imports = {} // name: {source:相对当前模块的路径/绝对路径, importName: 导入的变量名}
     this.exports = {}
     this.definitions = {} // 存放本模块的顶级变量的定义语句是那个
+    // 存放变量修改的语句 副作用
+    this.modifications = {}
     // 分析语法树
     analyse(this.ast, this.code, this)
   }
@@ -31,6 +34,8 @@ class Module{
     this.ast.body.forEach(statement=>{
       // 过滤掉导入的语句
       if (statement.type === 'ImportDeclaration') return
+      // 默认情况不包含所有的变量声明语句
+      if (statement.type === 'VariableDeclaration') return
       const statements = this.expandStatement(statement)
       allStatements.push(...statements)
     })
@@ -46,6 +51,20 @@ class Module{
       res.push(...definitions)
     })
     res.push(statement)
+    // 找到此语句定义的变量 把此语句对应的修改语句也包含进去
+    const defines = Object.keys(statement._defines)
+    defines.forEach(name => {
+      // 找到变量对应的副作用语句
+      const modifications = Object.hasOwn(this.modifications, name) && this.modifications[name]
+      if (modifications) {
+        modifications.forEach(modification => {
+          if (!modification._included) {
+            const statements = this.expandStatement(modification)
+            res.push(...statements)
+          }
+        })
+      }
+    })
     return res
   }
   define(name){
@@ -59,10 +78,18 @@ class Module{
     } else {
       // 内部定义的
       const statement = this.definitions[name] // 变量定义的语句
-      if (statement && !statement._included) {
-        return this.expandStatement(statement)
+      if (statement) {
+        if (statement._included) {
+          return []
+        } else {
+          return this.expandStatement(statement)
+        }
       } else {
-        return []
+        if (SYSTEM_VARS.includes(name)) {
+          return []
+        } else {
+          throw new Error(`变量${name}即没有外部导入，也没有在当前模块内声明。`)
+        }
       }
     }
   }

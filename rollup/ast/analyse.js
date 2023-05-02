@@ -22,6 +22,9 @@ function analyse(ast, code, module){
       },
       _defines: {
         value: {}, // 表示此语句定义的顶级变量 {name: true }
+      },
+      _modifies: {
+        value: {}, // 存放修改语句 副作用语句
       }
     })
     // 找出导入的变量 import {} from 'xx'
@@ -63,22 +66,47 @@ function analyse(ast, code, module){
   let currentScope = new Scope({ name: '模块内的顶级作用域' })
 
   ast.body.forEach(statement=>{
-    function addToScope(name) {
-      currentScope.add(name)
-      if (currentScope.parent === null) {
+    /**
+     * 
+     * @param {*} name 
+     * @param {*} isBlockDeclaration 是否是块级声明 let const
+     */
+    function addToScope(name, isBlockDeclaration) {
+      currentScope.add(name, isBlockDeclaration)
+      if (currentScope.parent === null ||
+        (currentScope.isBlock && !isBlockDeclaration) // 是块级作用域 但是不是块级变量 变量提升
+        ) {
         // 是顶级作用域了 此变量就是顶级作用域变量了
         // 则该变量需要保存
         statement._defines[name] = true // 该语句定义了顶级变量
         module.definitions[name] = statement // 此顶级变量定义的语句就是这条语句
       }
     }
+    // 读取变量名了
+    function checkForReads(node){
+      if (node.type === 'Identifier'){
+        // 表示当前这个语句依赖了 node.name这个变量
+        statement._dependsOn[node.name] = true
+      }
+    }
+    // 修改语句
+    function checkForWrites(node) {
+      if (node.type === 'AssignmentExpression') {
+        addNode(node.left)
+      } else if (node.type === 'UpdateExpression') {
+        addNode(node.argument)
+      }
+    }
+    function addNode(node){
+      const { name } = node
+      statement._modifies[name] = true // 表示此语句修改了该变量
+      if (!Object.hasOwn(module.modifications, name)) module.modifications[name] = []
+      module.modifications[name].push(statement)
+    }
     wark(statement, {
       enter(node){
-        // 读取变量名了
-        if (node.type === 'Identifier'){
-          // 表示当前这个语句依赖了 node.name这个变量
-          statement._dependsOn[node.name] = true
-        }
+        checkForReads(node)
+        checkForWrites(node)
         let newScope = null
         switch (node.type) {
           // 函数声明 需要创建新的作用域 function say(){}
@@ -106,6 +134,7 @@ function analyse(ast, code, module){
               name: node.id.name,
               parent: currentScope,
               names, // 如果有参数 直接可以放入names
+              isBlock: false
             })
             break;
           }
@@ -114,10 +143,18 @@ function analyse(ast, code, module){
           case 'VariableDeclaration': { // 变量声明
             const declarations = node.declarations
             declarations.forEach(declaration => {
-              addToScope(declaration.id.name)
+              if (node.kind === 'let' || node.kind === 'const')
+                addToScope(declaration.id.name, true)
+              else addToScope(declaration.id.name, false) // var
             })
             break
           }
+          case 'BlockStatement':
+            newScope = new Scope({
+              parent: currentScope,
+              isBlock: true
+            })
+            break
           default:
             break
         }

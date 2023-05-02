@@ -1,7 +1,7 @@
-console.log('main.js')
-console.log('hello')
+const name = 'aaa'
 const name = 'name'
-function say(a, ...[b,c]) {
-  console.log(name, a, b, c)
-}
-say()
+const name1 = name + '1'
+let age = 22
+age += 20
+age++
+console.log(name, name1, age)
