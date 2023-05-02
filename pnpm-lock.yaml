@@ -7,8 +7,10 @@ specifiers:
   '@rollup/plugin-commonjs': ^24.1.0
   '@rollup/plugin-node-resolve': ^15.0.2
   '@rollup/plugin-typescript': ^11.1.0
+  acorn: ^8.8.2
   jquery: ^3.6.4
   lodash: ^4.17.21
+  magic-string: ^0.30.0
   postcss: ^8.4.23
   rollup: ^3.21.2
   rollup-plugin-babel: ^4.4.0
@@ -30,7 +32,9 @@ devDependencies:
   '@rollup/plugin-commonjs': registry.npmmirror.com/@rollup/plugin-commonjs/24.1.0_rollup@3.21.2
   '@rollup/plugin-node-resolve': registry.npmmirror.com/@rollup/plugin-node-resolve/15.0.2_rollup@3.21.2
   '@rollup/plugin-typescript': registry.npmmirror.com/@rollup/plugin-typescript/11.1.0_3iz5aekbc5nd2z3nnfyqb5wciu
+  acorn: registry.npmmirror.com/acorn/8.8.2
   lodash: registry.npmmirror.com/lodash/4.17.21
+  magic-string: registry.npmmirror.com/magic-string/0.30.0
   postcss: registry.npmmirror.com/postcss/8.4.23
   rollup: registry.npmmirror.com/rollup/3.21.2
   rollup-plugin-babel: registry.npmmirror.com/rollup-plugin-babel/4.4.0_2g2joqyyadgsdov6s2ekqv3lyi
@@ -2508,6 +2512,15 @@ packages:
     resolution: {integrity: sha512-8UnnX2PeRAPZuN12svgR9j7M1uWMovg/CEnIwIG0LFkXSJJe4PdfUGiTGl8V9bsBHFUtfVINcSyYxd7q+kx9fA==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/magic-string/-/magic-string-0.27.0.tgz}
     name: magic-string
     version: 0.27.0
+    engines: {node: '>=12'}
+    dependencies:
+      '@jridgewell/sourcemap-codec': registry.npmmirror.com/@jridgewell/sourcemap-codec/1.4.15
+    dev: true
+
+  registry.npmmirror.com/magic-string/0.30.0:
+    resolution: {integrity: sha512-LA+31JYDJLs82r2ScLrlz1GjSgu66ZV518eyWT+S8VhyQn/JL0u9MeBOvQMGYiPk1DBiSN9DDMOcXvigJZaViQ==, registry: https://registry.npm.taobao.org/, tarball: https://registry.npmmirror.com/magic-string/-/magic-string-0.30.0.tgz}
+    name: magic-string
+    version: 0.30.0
     engines: {node: '>=12'}
     dependencies:
       '@jridgewell/sourcemap-codec': registry.npmmirror.com/@jridgewell/sourcemap-codec/1.4.15

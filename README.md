@@ -105,7 +105,7 @@ System.register('calculator', [], (function (exports) {
 
 ```
 
-## rollup的基本使用
+### rollup的基本使用
 
 ```js
 // 使用babel
@@ -155,6 +155,139 @@ export default {
     })
   ],
 };
+```
+
+## rollup的实现
+
+安装依赖
+
+```shell
+pnpm i rollup magic-string acorn -D
+```
+
+### magic-string的用法
+
+```js
+import MagicString, { Bundle } from 'magic-string'
+const sourceCode = `export const name = 'mao'`
+const ms = new MagicString(sourceCode)
+// 裁减 0-6范围的内容
+console.log(ms.snip(0, 6).toString()) // export
+// 删除 0-7范围的内容
+console.log(ms.remove(0, 7).toString()) // const name = 'mao'
+// 拼接字符串
+const bundle = new Bundle()
+bundle.addSource({
+  content: 'const a = 1;',
+  // separator: '\n'
+})
+bundle.addSource({
+  content: 'const b = 2;',
+  // separator: '\n'
+})
+console.log(bundle.toString())
+```
+
+### acron的使用
+
+#### ast遍历
+
+```js
+import * as acron from 'acorn'
+const sourceCode = `import $ from 'jquery'`
+// 解析生成ast
+const ast = acron.parse(sourceCode, {
+  locations: true,
+  ranges: true,
+  sourceType: 'module',
+  ecmaVersion: 8
+})
+
+// 遍历ast
+function walk(astNode, {enter, leave}){
+  visit(astNode, null, enter, leave)
+}
+function visit(node, parent, enter, leave){
+  if (enter) enter(node, parent)
+  const keys = Object.keys(node).filter(key => typeof node[key] === 'object')
+  keys.forEach(key=>{
+    const vals = node[key]
+    if (Array.isArray(vals)) {
+      vals.forEach(val => val.type && visit(val, node, enter, leave))
+    }else if(vals && vals.type){
+      visit(vals, node, enter, leave)
+    }
+  })
+  if (leave) leave(node, parent)
+}
+
+ast.body.forEach(statement => {
+  walk(statement, {
+    enter(node){
+      console.log(node.type, '进入')
+    },
+    leave(node){
+      console.log(node.type, '离开')
+    }
+  })
+})
+```
+
+#### js变量作用域
+
+```js
+
+class Scope {
+  constructor(options = {}) {
+    this.name = options.name // 作用域名称
+    /**
+     * @type {Scope}
+     */
+    this.parent = options.parent // 父作用域
+    this.names = options.names// 当前作用域中定义的变量
+  }
+  add(name) {
+    this.names.push(name) // 作用域中添加一个新的变量
+  }
+  findDefiningScope(name) {
+    // 查找变量作用域
+    if (this.names.includes(name)) {
+      return this
+    }
+    if (this.parent !== null)
+      return this.parent.findDefiningScope(name)
+    return null
+  }
+}
+
+// =============================
+var a = 1
+function one(){
+  var b = 2
+  function two(){
+    var c = 3
+    console.log(a, b, c)
+  }
+}
+// =============================
+const globalScope = new Scope({
+  name: 'global',
+  names: ['a'],
+  parent: null
+})
+const oneScope = new Scope({
+  name: 'oneScope',
+  names: ['b'],
+  parent: globalScope
+})
+const twoScope = new Scope({
+  name: 'twoScope',
+  names: ['c'],
+  parent: oneScope
+})
+console.log(twoScope.findDefiningScope('c'))
+console.log(twoScope.findDefiningScope('b'))
+console.log(twoScope.findDefiningScope('a'))
 ```
 
 ### rollup插件的编写
