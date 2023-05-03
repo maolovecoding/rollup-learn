@@ -9,7 +9,29 @@
 </head>
 
 <body>
-  <script src="./bundle.js"></script>
+  <script type="module">
+    function dynamicImportPolyfill(filename, url) {
+      // console.log(new URL(filename, url).href)
+      console.log(filename, url) // http://127.0.0.1:5500/dist/main.js
+      return new Promise(resolve => {
+        const script = document.createElement('script')
+        script.type = "module"
+        const absURL = new URL(filename, url).href
+        const blob = new Blob([
+          `import * as mod from '${absURL}';`,
+          `window.mod = mod;`
+        ], {
+          type: "text/javascript"
+        })
+        script.src = URL.createObjectURL(blob)
+        console.log(URL.createObjectURL(blob))
+        document.head.appendChild(script)
+        script.onload = () => resolve(window.mod)
+      })
+    }
+    window.dynamicImportPolyfill = dynamicImportPolyfill
+  </script>
+  <script src="../dist/main.js" type="module"></script>
 </body>
 
 </html>

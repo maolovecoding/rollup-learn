@@ -295,3 +295,40 @@ console.log(twoScope.findDefiningScope('a'))
 #### 插件的钩子执行流程图
 
 ![image-20220508164526513](https://gitee.com/maolovecoding/picture/raw/master/images/web/webpack/image-20220508164526513.png)
+
+#### rollup执行三个阶段
+
+```js
+import { rollup } from 'rollup'
+import config from './rollup.config.js'
+
+/** 
+ * rollup 执行有三个阶段
+ * 1. 打包阶段
+ * 2. 生成阶段
+ * 3. 写入阶段
+*/
+(async () => {
+  // 1. 打包阶段
+  const bundle = await rollup(config)
+  // 2. 生成阶段
+  await bundle.generate(config.output)
+  // 3. 写入阶段
+  await bundle.write(config.output)
+  // 4. 关闭阶段
+  await bundle.close()
+})()
+```
+
+#### 插件的编写
+
+1. 插件是一个函数
+2. 插件返回值是一个对象
+
+- 插件应该有一个清晰的名称，带有rollup-plugin-prefix
+- 在package.json中包含插件关键字
+- 插件应该经过测试。我们推荐mocha或ava，它们支持开箱即用的Promise
+- 尽可能使用异步方法。
+- 编写英文文档
+- 如果合适的话，确保你的插件输出正确的sourcemap
+- 如果您的插件使用“虚拟模块”（例如，用于辅助功能），请在模块ID前面加上\0。这会阻止其他插件尝试处理它
